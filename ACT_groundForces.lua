@@ -23,7 +23,7 @@ bombCooldownTimer = 600                                 --Not in use
 engagementZones = {"zoneEngagement-1", "zoneEngagement-2"}
 ambushZones = {"zoneAmbush-1", "zoneAmbush-2"}
 
-enableDebug = false
+enableDebug = true
 
 redAmountPerZone = 4
 
@@ -32,12 +32,15 @@ refreshTimer = 300
 engDistanceOuter = 480 
 engDistanceInner = 100  
 
+destThreshold = 0.7                                     --if a group falls below this amount of its inital strenght, it gets destroyed
+
 facGroup = {"FACA - Yak-52", "FACA - F-86F", "FACA - L-39ZA", "FACA - TF-51D"}
 
 -- Declarations
 blueVec3array = {}
 blueNameArray = {}
 redVec3array = {}
+redNameArray = {}
 engagementStates = {}
 ambushStates = {}
 facID = {}
@@ -76,6 +79,16 @@ function debug(string)
         trigger.action.outText(string, 5)
     end
     env.error("ACT_groundForces: "..string, false)
+end
+
+function arraySlice(array, slicedEntry)
+	local sliced = {}
+	for i = 1, #array, 1 do
+    	if array[i] ~= slicedEntry then
+    		sliced[#sliced+1] = array[i]
+    	end
+	end
+	return sliced
 end
 
 function spawnBlueInZone(zoneString)
@@ -138,6 +151,7 @@ function spawnRedAtVec3(vec3Blue, amount)                           --Spawns amo
         }
 
         redVec3array[#redVec3array + 1] =  vec3Red
+        redNameArray[#redNameArray + 1] = groupString
         spawnIndex = spawnIndex + 1  
 
         params = {}
@@ -149,6 +163,26 @@ function spawnRedAtVec3(vec3Blue, amount)                           --Spawns amo
         debug("Spawned red infantry "..tostring(#redVec3array))
         
     end
+end
+
+function checkHealth(groupName)
+    for i = 1, #redNameArray do
+        if redNameArray[i] == groupName then
+            local initialSize = Group.getByName(groupName):getInitialSize()
+            local currentSize = Group.getByName(groupName):getSize()
+
+            debug(groupName .. ": " .. "initial size: " .. initialSize .. "; current size " .. currentSize) --is current size is off by +1 for some reason
+            if (currentSize-1) / initialSize <= destThreshold then      --checks if a unit is below the destruction threshold. the -1 is because DCS seems to report them offset by one, debugs shows the "true" numbers.
+                destroyRedGroup(groupName)
+            end
+        end
+    end
+end
+
+function destroyRedGroup(groupName)
+    Group.getByName(groupName):destroy()                                  --destroys the red group
+    redNameArray = arraySlice(redNameArray, groupName)                    --removes the entry of the group from the redNameArray                                  
+    debug(groupName .. " destroyed!")
 end
 
 --TODO: Write function that destroys old engagement and spawn new one elsewere
@@ -284,7 +318,13 @@ do
                     facF10[i] = false
                 end
             end
+            
+        elseif (8 == event.id) then --unit dead event
+            --maybe check for red coalition
+            debug("Unit destroyed: " .. event.initiator:getGroup():getName())
+            checkHealth(event.initiator:getGroup():getName())
         end
+
         return old_onEvent(event)
     end
 

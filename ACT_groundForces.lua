@@ -22,7 +22,7 @@ smokeCooldownTimer = 120                                 --shortest amount of ti
 smokeTime = timer.getTime()
 artyCooldownTimer = 120                                 --shortest amount of time in seconds an arty strike can be called in
 artyTime = timer.getTime()
-b52CooldownTimer = 1                                  --shortest amount of time in seconds a b52 can be spawned in
+b52CooldownTimer = 600                                  --shortest amount of time in seconds a b52 can be spawned in
 b52Time = timer.getTime()								--sets the initial clock runing on the b52 spawner
 b52Counter = -1 									    --Global variable for counting the might B52's we spawn
 b52vec3 = {}											--later used to pass b52 target co 
@@ -30,7 +30,7 @@ b52vec3 = {}											--later used to pass b52 target co
 engagementZones = {"zoneEngagement-1", "zoneEngagement-2"}
 ambushZones = {"zoneAmbush-1", "zoneAmbush-2"}
 
-enableDebug = true
+enableDebug = false
 
 redAmountPerZone = 4
 
@@ -323,13 +323,13 @@ do
             if event.text == "arty" then --could be possible to add initiator requirement
 				if ((artyTime + artyCooldownTimer) <= timer.getTime()) then
 					taskArty(mist.utils.makeVec2(event.pos))
-                taskArty(mist.utils.makeVec2(event.pos))  
+                    taskArty(mist.utils.makeVec2(event.pos))  
 					taskArty(mist.utils.makeVec2(event.pos))
-                taskArty(mist.utils.makeVec2(event.pos))  
+                    taskArty(mist.utils.makeVec2(event.pos))  
 					taskArty(mist.utils.makeVec2(event.pos))
-                taskArty(mist.utils.makeVec2(event.pos))  
+                    taskArty(mist.utils.makeVec2(event.pos))  
 					taskArty(mist.utils.makeVec2(event.pos))
-                taskArty(mist.utils.makeVec2(event.pos))  
+                    taskArty(mist.utils.makeVec2(event.pos))  
 					taskArty(mist.utils.makeVec2(event.pos))
 					notify("Fire mission order received.",10)
 					artyTime = timer.getTime()
@@ -393,7 +393,7 @@ do
 				end
             end
 		elseif (3 == event.id and -1 ~= b52Counter) then
-			notify("debug0: event ID: " .. event.id, 5)
+			debug("debug event ID: " .. event.id, 5)
 			taskBombing(b52vec3)
             debug("Send B-52 vec3 co ord")
             

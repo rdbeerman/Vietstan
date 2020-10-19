@@ -345,18 +345,22 @@ do
 
                 if ((b52Time + b52CooldownTimer) <= timer.getTime()) then
 
-                    local attackAzimuthDeg = string.match(event.text, '%d%d%d')
+                    local attackAzimuthDeg = string.match(event.text, '%d%d%d') --checks for 3 digitis in the message of the mark, if more than 3 digits are entered, it returns the first 3. 
                     debug ("attackAzimuthDeg: " .. attackAzimuthDeg)
                     if tonumber (attackAzimuthDeg) <= 360 then
+
                         attackAzimuth = mist.utils.toRadian (tonumber(attackAzimuthDeg))
                         debug("attackAzimuth (rad): " .. attackAzimuth)
-                    end
 
-					spawnB52()					 --function to spawn a b52
-					b52vec3 = mist.utils.makeVec3GL(event.pos) --makeVec3GL is basically Vec2 at ground level int vec 3, this is the location of the bomber
-					notify("Arc Light strike confirmed, B-52 running in hot.",10)
-					b52Time = timer.getTime() -- reset the clock
-                    debug("B-52 mission sent")
+                        spawnB52()					 --function to spawn a b52
+					    b52vec3 = mist.utils.makeVec3GL(event.pos) --makeVec3GL is basically Vec2 at ground level int vec 3, this is the location of the bomber
+					    notify("Arc Light strike confirmed, B-52 running in hot.",10)
+					    b52Time = timer.getTime() -- reset the clock
+                        debug("B-52 mission sent")
+                    
+                    else
+                        notify("Invalid request: Please enter attack direction", 10)
+                    end
                     
 				else
 					local timeTilStrike = (b52Time + b52CooldownTimer) - timer.getTime() --some maths to work out how long the next strike is in seconds

@@ -284,10 +284,11 @@ end
 function taskBombing(b52vec3) --task spawns a late activated unit called bombGroup gives it a waypoint to bomb and blows it up
 	local target = {} --empty target arrary
 		target.point = {x= b52vec3.x , y= b52vec3.z} --dcs is dumb for which co ordinates are actual x and y
-		target.expend = "All" --other options, "All" "Half" "Quarter" "Four" "Two" "One"
-		target.weaponType = 16 -- 16 is iron bombs
-		target.attackQty = 1
-		target.direction = 5			--can't get this to work in large script works in limited script, no idea why
+        target.weaponType = 16 -- 16 is iron bombs
+        target.expend = "All" --other options, "All" "Half" "Quarter" "Four" "Two" "One"
+        target.attackQty = 1
+        target.direction = attackAzimuth
+        target.directionEnabled = true			--can't get this to work in large script works in limited script, no idea why
 		target.altitude = 3000 --min altitude to not go below above ground level (may cause wonky flight and death if set too low)
 		target.altitudeEnabled = true -- true if min altitude restrictoin to be enforced
 		target.groupAttack = true -- only useful if more than one bomber, will attack together
@@ -340,13 +341,23 @@ do
 					debug("Arty mission, too soon fail.")
 				end	
                  
-            elseif event.text == "bomb" then --if the mark point has the word bomb in it
-				if ((b52Time + b52CooldownTimer) <= timer.getTime()) then
+            elseif string.find (event.text, "bomb") then --if the mark point has the word bomb in it
+
+                if ((b52Time + b52CooldownTimer) <= timer.getTime()) then
+
+                    local attackAzimuthDeg = string.match(event.text, '%d%d%d')
+                    debug ("attackAzimuthDeg: " .. attackAzimuthDeg)
+                    if tonumber (attackAzimuthDeg) <= 360 then
+                        attackAzimuth = mist.utils.toRadian (tonumber(attackAzimuthDeg))
+                        debug("attackAzimuth (rad): " .. attackAzimuth)
+                    end
+
 					spawnB52()					 --function to spawn a b52
 					b52vec3 = mist.utils.makeVec3GL(event.pos) --makeVec3GL is basically Vec2 at ground level int vec 3, this is the location of the bomber
 					notify("Arc Light strike confirmed, B-52 running in hot.",10)
 					b52Time = timer.getTime() -- reset the clock
-					debug("B-52 mission sent")
+                    debug("B-52 mission sent")
+                    
 				else
 					local timeTilStrike = (b52Time + b52CooldownTimer) - timer.getTime() --some maths to work out how long the next strike is in seconds
 					local timeTilStrike = math.floor(timeTilStrike+0.5) --sort of round the function super crude but works
@@ -380,7 +391,8 @@ do
 		elseif (3 == event.id and -1 ~= b52Counter) then
 			notify("debug0: event ID: " .. event.id, 5)
 			taskBombing(b52vec3)
-			debug("Send B-52 vec3 co ord")
+            debug("Send B-52 vec3 co ord")
+            
 		elseif (15 == event.id) then
             local group = event.initiator:getGroup()
             local groupName = event.initiator:getName()
@@ -396,10 +408,10 @@ do
             end
 
         elseif (8 == event.id) then --unit dead event
-            --maybe check for red coalition
-            debug("Unit destroyed: " .. event.initiator:getGroup():getName())
-            checkHealth(event.initiator:getGroup():getName())
-
+            if event.initiator:isExist() == true then
+                debug("Unit destroyed: " .. event.initiator:getGroup():getName())
+                checkHealth(event.initiator:getGroup():getName())
+            end
         end
         return old_onEvent(event)
     end

@@ -38,10 +38,11 @@ smokeCooldownTimer = 120                                 --shortest amount of ti
 smokeTime = timer.getTime()
 artyCooldownTimer = 120                                 --shortest amount of time in seconds an arty strike can be called in
 artyTime = timer.getTime()
-b52CooldownTimer = 600                                  --shortest amount of time in seconds a b52 can be spawned in
+b52CooldownTimer = 2                                  --shortest amount of time in seconds a b52 can be spawned in
 b52Time = timer.getTime()								--sets the initial clock runing on the b52 spawner
 b52Counter = -1 									    --Global variable for counting the might B52's we spawn
-b52vec3 = {}											--later used to pass b52 target co 
+b52vec3 = {}                                            --later used to pass b52 target co 
+attackHeading = 0											
 
 engagementZones = {"zoneEngagement-1", "zoneEngagement-2"}
 ambushZones = {"zoneAmbush-1", "zoneAmbush-2"}
@@ -55,7 +56,7 @@ refreshTimer = 300
 engDistanceOuter = 480 
 engDistanceInner = 100  
 
-destThreshold = 0.7                                     --if a group falls below this amount of its inital strenght, it gets destroyed
+destThreshold = 0.65                                     --if a group falls below this amount of its inital strenght, it gets destroyed
 
 facGroup = {"FACA - Yak-52", "FACA - F-86F", "FACA - L-39ZA", "FACA - TF-51D"}
 
@@ -297,13 +298,13 @@ function spawnB52()
 	debug("Bomber spawned")
 end	
 	
-function taskBombing(b52vec3) --task spawns a late activated unit called bombGroup gives it a waypoint to bomb and blows it up
+function taskBombing(b52vec3, attackDirection) --task spawns a late activated unit called bombGroup gives it a waypoint to bomb and blows it up
 	local target = {} --empty target arrary
 		target.point = {x= b52vec3.x , y= b52vec3.z} --dcs is dumb for which co ordinates are actual x and y
         target.weaponType = 16 -- 16 is iron bombs
         target.expend = "All" --other options, "All" "Half" "Quarter" "Four" "Two" "One"
         target.attackQty = 1
-        target.direction = attackAzimuth
+        target.direction = attackDirection
         target.directionEnabled = true			--enforces target direction to be used
 		target.altitude = 3000 --min altitude to not go below above ground level (may cause wonky flight and death if set too low)
 		target.altitudeEnabled = true -- true if min altitude restrictoin to be enforced
@@ -365,8 +366,8 @@ do
                     debug ("attackAzimuthDeg: " .. attackAzimuthDeg)
                     if tonumber (attackAzimuthDeg) <= 360 then
 
-                        attackAzimuth = mist.utils.toRadian (tonumber(attackAzimuthDeg))
-                        debug("attackAzimuth (rad): " .. attackAzimuth)
+                        attackHeading = mist.utils.toRadian (tonumber(attackAzimuthDeg)) + 3.14
+                        debug("attackHeading(rad): " .. attackHeading)
 
                         spawnB52()					 --function to spawn a b52
 					    b52vec3 = mist.utils.makeVec3GL(event.pos) --makeVec3GL is basically Vec2 at ground level int vec 3, this is the location of the bomber
@@ -410,7 +411,7 @@ do
             end
 		elseif (3 == event.id and -1 ~= b52Counter) then
 			--debug("debug event ID: " .. event.id, 5)
-			taskBombing(b52vec3)
+			taskBombing(b52vec3, attackHeading)
             debug("Send B-52 vec3 co ord")
             
 		elseif (15 == event.id) then
@@ -428,9 +429,12 @@ do
             end
 
         elseif (8 == event.id) then --unit dead event
-            if event.initiator:isExist() == true then
-                debug("Unit destroyed: " .. event.initiator:getGroup():getName())
-                checkHealth(event.initiator:getGroup():getName())
+            --debug("Event.initiator category: " .. event.initiator:getCategory())
+            if event.initiator:getCategory() == 1 then --checks if the initiator is a unit
+                if event.initiator:getCoalition() ==  1 then --checks if the initator is from the red coalition
+                    debug("Unit destroyed: " .. event.initiator:getGroup():getName())
+                    checkHealth(event.initiator:getGroup():getName())
+                end
             end
         end
         return old_onEvent(event)

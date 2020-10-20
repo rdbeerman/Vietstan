@@ -331,6 +331,12 @@ function notify(message, displayFor) --activiy notify function
     trigger.action.outText(message, displayFor)
 end
 
+function setThreshold(mode)
+    local thresholdFactors = { 0.3, 0,4 ,0.5, 0,6, 0,7, 0,8}
+    destThreshold = thresholdFactors[mode]
+    notify("destThreshold set to: " .. thresholdFactors[mode], 5)
+end
+
 do
     debug("Starting init")
 -- Add event Handlers
@@ -439,6 +445,15 @@ do
         end
         return old_onEvent(event)
     end
+
+    --balancing test radio things:
+    radioBalancingSubMenu = missionCommands.addSubMenu ("set destThreshold:")
+    radioBalancingOption1 = missionCommands.addCommand ("destThreshold = 0.3", radioBalancingSubMenu, setThreshold, 1)
+    radioBalancingOption2 = missionCommands.addCommand ("destThreshold = 0.4", radioBalancingSubMenu, setThreshold, 2)
+    radioBalancingOption3 = missionCommands.addCommand ("destThreshold = 0.5", radioBalancingSubMenu, setThreshold, 3)
+    radioBalancingOption4 = missionCommands.addCommand ("destThreshold = 0.6", radioBalancingSubMenu, setThreshold, 4)
+    radioBalancingOption5 = missionCommands.addCommand ("destThreshold = 0.7", radioBalancingSubMenu, setThreshold, 5)
+    radioBalancingOption6 = missionCommands.addCommand ("destThreshold = 0.8", radioBalancingSubMenu, setThreshold, 6)
 
 -- Init scripts
     spawnEngagements()

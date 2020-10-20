@@ -9,6 +9,22 @@
     --      1. Place zoneEngagement for engagements to be spawned
     --      2. Place zoneAmbush for for random ambushes within said zone
     --      3. Place zoneLZ for generated medevac
+	
+--[[List of outstanding work to do
+
+1. Add in flares on friendly troop locations when requested, instead of smoke
+2. Add in flares on mark points instead of smoke, or as an alternative during the night.
+3. Add in some randomization on smoke / flare mark point co ords so not perfectly accurate
+4. Change default CTLD units we can pickup to consist of
+	Recon group - 2 M4 soliders
+	Rife chalk - 12 soliders, most m4, one 249
+	Mortar team - 3 soliders, or appropritae unit + 1 mortar
+	Anti air team - 1 m4 dude, 1 stinger (igla?) dude
+	Medical team - Some civies (maybe use USN deck crew?)
+	
+]]--	
+	
+	
 
 -- Define Settings
 infantryBlueTemplates = {"blueInfantry"}
@@ -288,7 +304,7 @@ function taskBombing(b52vec3) --task spawns a late activated unit called bombGro
         target.expend = "All" --other options, "All" "Half" "Quarter" "Four" "Two" "One"
         target.attackQty = 1
         target.direction = attackAzimuth
-        target.directionEnabled = true			--can't get this to work in large script works in limited script, no idea why
+        target.directionEnabled = true			--enforces target direction to be used
 		target.altitude = 3000 --min altitude to not go below above ground level (may cause wonky flight and death if set too low)
 		target.altitudeEnabled = true -- true if min altitude restrictoin to be enforced
 		target.groupAttack = true -- only useful if more than one bomber, will attack together
@@ -393,7 +409,7 @@ do
 				end
             end
 		elseif (3 == event.id and -1 ~= b52Counter) then
-			debug("debug event ID: " .. event.id, 5)
+			--debug("debug event ID: " .. event.id, 5)
 			taskBombing(b52vec3)
             debug("Send B-52 vec3 co ord")
             

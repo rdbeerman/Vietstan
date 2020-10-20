@@ -289,8 +289,8 @@ ctld.spawnableCrates = {
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
         -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
-        { weight = 500, desc = "H113 APC", unit = "APC M113", side = 2 },
-        { weight = 400, desc = "Artillery", unit = "SPH 2S1 Gvozdika", side = 2, cratesRequired = 2 },
+        { weight = 500, desc = "M113 APC", unit = "M113", side = 2 },
+        { weight = 400, desc = "Artillery", unit = "SAU Gvozdika", side = 2, cratesRequired = 2 },
     },
     ["AA Crates"] = {
         { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },

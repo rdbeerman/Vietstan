@@ -426,7 +426,8 @@ do
             debug("Send B-52 vec3 co ord")
             
 		elseif (15 == event.id) then
-            local group = event.initiator:getGroup()
+		if event.initiator:getCategory() == 1 then
+			local group = event.initiator:getGroup()
             local groupName = event.initiator:getName()
             for i = 1, #facGroup, 1 do
                 if groupName == facGroup[i] and facF10[i] == true then
@@ -438,7 +439,7 @@ do
                     facF10[i] = false
                 end
             end
-
+		end
         elseif (8 == event.id) then --unit dead event
             --debug("Event.initiator category: " .. event.initiator:getCategory())
             if event.initiator:getCategory() == 1 then --checks if the initiator is a unit
@@ -450,6 +451,7 @@ do
         end
         return old_onEvent(event)
     end
+	
 
     --balancing test radio things:
     radioBalancingSubMenu = missionCommands.addSubMenu ("set destThreshold:")

@@ -322,8 +322,22 @@ function taskBombing(b52vec3, attackDirection) --task spawns a late activated un
 end
 
 function taskSmoke(vec3,colour) --spawn a smoke on a marker
+	
+	local vec3Rand = mist.getRandPointInCircle(vec3,10,200)
+	local vec3RandGL = mist.utils.makeVec3GL(vec3Rand)
+	
+	if colour == "green" then
+		trigger.action.smoke(vec3RandGL,0) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "red" then	
+		trigger.action.smoke(vec3RandGL,1) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "white" then	
+		trigger.action.smoke(vec3RandGL,2) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "orange" then	
+		trigger.action.smoke(vec3RandGL,3) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "blue" then	
+		trigger.action.smoke(vec3RandGL,4) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	end
 	notify("Smoke is on the deck",10)
-	trigger.action.smoke(vec3,colour)
 	debug("Smoke mission")
 end
 
@@ -395,17 +409,7 @@ do
 			elseif (event.text == "green" or event.text == "red" or event.text == "white" or event.text == "orange" or event.text == "blue") then --if the mark point has the word smoke in it
 				if ((smokeTime + smokeCooldownTimer) <= timer.getTime()) then
 					vec3 = mist.utils.makeVec3GL(event.pos) --makeVec3GL is basically Vec2 at ground level into vec 3
-					if event.text == "green" then
-						taskSmoke(vec3,0) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-					elseif event.text == "red" then	
-						taskSmoke(vec3,1) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-					elseif event.text == "white" then	
-						taskSmoke(vec3,2) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-					elseif event.text == "orange" then	
-						taskSmoke(vec3,3) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-					elseif event.text == "blue" then	
-						taskSmoke(vec3,4) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-					end
+					taskSmoke(vec3,event.text)
 					smokeTime = timer.getTime() -- reset the clock
 					debug("Smoke mission sent")
 				else

@@ -265,6 +265,8 @@ function genAmbush()
             local groupString = countryName.." gnd "..tostring(spawnIndex)--Put above together to make groupName
     
             mist.cloneInZone(template, ambushZones[i])                   --Spawn template group in zone
+
+            redNameArray[#redNameArray + 1] = groupString
             spawnIndex = spawnIndex + 1
             debug("Spawned Ambush") 
         end

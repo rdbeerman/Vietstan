@@ -272,7 +272,7 @@ function genAmbush()
     end
 end
 
-function taskArty(vec2)                                                 --Add support for cooldown 
+function taskArty(vec2, shellQty)                                                 --Add support for cooldown 
     local group = Group.getByName(artyGroup)                            --User provides rounds, ammo
     local controller = group:getController()
 
@@ -284,7 +284,7 @@ function taskArty(vec2)                                                 --Add su
         params = {
         point = vec2,
         radius = 200,
-        expendQty = 10,
+        expendQty = shellQty,
         expendQtyEnabled = true, 
         }
     } 
@@ -352,26 +352,34 @@ function setThreshold(mode)
     notify("destThreshold set to: " .. thresholdFactors[mode], 5)
 end
 
+function debug_script ()
+    notify("Debug script", 30)
+    local debugOutput = Group.getByName("Ground-2"):getUnit(1):getTypeName()
+    notify("Unit type: " .. debugOutput, 30)
+end
+
 do
     debug("Starting init")
 -- Add event Handlers
     local old_onEvent = world.onEvent
     world.onEvent = function(event)
         if (26 == event.id) then --this event is detecting mark point on the map
-            if event.text == "arty" then --could be possible to add initiator requirement
-				if ((artyTime + artyCooldownTimer) <= timer.getTime()) then
-					taskArty(mist.utils.makeVec2(event.pos))
-                    taskArty(mist.utils.makeVec2(event.pos))  
-					taskArty(mist.utils.makeVec2(event.pos))
-                    taskArty(mist.utils.makeVec2(event.pos))  
-					taskArty(mist.utils.makeVec2(event.pos))
-                    taskArty(mist.utils.makeVec2(event.pos))  
-					taskArty(mist.utils.makeVec2(event.pos))
-                    taskArty(mist.utils.makeVec2(event.pos))  
-					taskArty(mist.utils.makeVec2(event.pos))
-					notify("Fire mission order received.",10)
-					artyTime = timer.getTime()
-					debug("Arty mission sent")
+
+            if string.find (event.text, "arty") then --could be possible to add initiator requirement
+                local requestedRounds = string.match(event.text, '%d%d%d')
+                debug(requestedRounds)
+
+                if ((artyTime + artyCooldownTimer) <= timer.getTime()) then
+                    if reuqestedRounds >= 1 then
+                        taskArty(mist.utils.makeVec2(event.pos), tonumber(requestedRounds))
+                        notify("Fire mission order received. Firing " .. requestedRounds .. "rounds.",10)
+                    else
+                        taskArty(mist.utils.makeVec2(event.pos), 10)
+                        notify("Fire mission order received. Firing 10 rounds.",10)
+                    end
+                    artyTime = timer.getTime()
+                    debug("Arty mission sent")
+                    
 				else
 					local timeTilArty = (artyTime + artyCooldownTimer) - timer.getTime() --some maths to work out how long the next strike is in seconds
 					local timeTilArty = math.floor(timeTilArty+0.5) --sort of round the function super crude but works
@@ -380,16 +388,13 @@ do
 				end	
                  
             elseif string.find (event.text, "bomb") then --if the mark point has the word bomb in it
-
                 if ((b52Time + b52CooldownTimer) <= timer.getTime()) then
-
                     local attackAzimuthDeg = string.match(event.text, '%d%d%d') --checks for 3 digitis in the message of the mark, if more than 3 digits are entered, it returns the first 3. 
                     debug ("attackAzimuthDeg: " .. attackAzimuthDeg)
                     if tonumber (attackAzimuthDeg) <= 360 then
 
                         attackHeading = mist.utils.toRadian (tonumber(attackAzimuthDeg)) + 3.14
                         debug("attackHeading(rad): " .. attackHeading)
-
                         spawnB52()					 --function to spawn a b52
 					    b52vec3 = mist.utils.makeVec3GL(event.pos) --makeVec3GL is basically Vec2 at ground level int vec 3, this is the location of the bomber
 					    notify("Arc Light strike confirmed, B-52 running in hot.",10)
@@ -425,19 +430,21 @@ do
 			taskBombing(b52vec3, attackHeading)
             debug("Send B-52 vec3 co ord")
             
-		elseif (15 == event.id) then
-            local group = event.initiator:getGroup()
-            local groupName = event.initiator:getName()
-            for i = 1, #facGroup, 1 do
-                if groupName == facGroup[i] and facF10[i] == true then
-                    local groupID = group:getID()
-                    facMenu = missionCommands.addSubMenuForGroup(groupID, "FAC Commands")
-                    missionCommands.addCommandForGroup(groupID, "Smoke blue forces", facMenu, markBlueForces)
-                    missionCommands.addCommandForGroup(groupID, "Smoke red forces", facMenu, markRedForces)
-                    debug("Added FAC F10")
-                    facF10[i] = false
+        elseif (15 == event.id) then --birth
+            if event.initiator:getCategory() == 1 then
+                local groupName = event.initiator:getName()
+                for i = 1, #facGroup, 1 do
+                    if groupName == facGroup[i] and facF10[i] == true then
+                        local groupID = group:getID()
+                        facMenu = missionCommands.addSubMenuForGroup(groupID, "FAC Commands")
+                        missionCommands.addCommandForGroup(groupID, "Smoke blue forces", facMenu, markBlueForces)
+                        missionCommands.addCommandForGroup(groupID, "Smoke red forces", facMenu, markRedForces)
+                        debug("Added FAC F10")
+                        facF10[i] = false
+                    end
                 end
             end
+        
 
         elseif (8 == event.id) then --unit dead event
             --debug("Event.initiator category: " .. event.initiator:getCategory())
@@ -459,6 +466,8 @@ do
     radioBalancingOption4 = missionCommands.addCommand ("destThreshold = 0.6", radioBalancingSubMenu, setThreshold, 4)
     radioBalancingOption5 = missionCommands.addCommand ("destThreshold = 0.7", radioBalancingSubMenu, setThreshold, 5)
     radioBalancingOption6 = missionCommands.addCommand ("destThreshold = 0.8", radioBalancingSubMenu, setThreshold, 6)
+
+    radioDebugScript = missionCommands.addCommand ("debug_script", radioBalancingSubMenu, debug_script)
 
 -- Init scripts
     spawnEngagements()

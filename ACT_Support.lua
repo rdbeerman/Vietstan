@@ -143,7 +143,8 @@ function setThreshold(mode)
 end
 
 do 
--- Add event Handlers
+debug("Start ACT_Support")
+    -- Add event Handlers
     local old_onEvent = world.onEvent
     world.onEvent = function(event)
         if (26 == event.id) then --this event is detecting mark point on the map
@@ -240,4 +241,6 @@ do
      radioBalancingOption4 = missionCommands.addCommand ("destThreshold = 0.6", radioBalancingSubMenu, setThreshold, 4)
      radioBalancingOption5 = missionCommands.addCommand ("destThreshold = 0.7", radioBalancingSubMenu, setThreshold, 5)
      radioBalancingOption6 = missionCommands.addCommand ("destThreshold = 0.8", radioBalancingSubMenu, setThreshold, 6)
+
+    debug("ACT_Support completed")
 end

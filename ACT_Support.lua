@@ -132,6 +132,22 @@ function taskSmoke(vec3,colour) --spawn a smoke on a marker
 	debug("Smoke mission")
 end
 
+function smokeSelf(groupName, colour)
+    local facaPosRandGL = mist.utils.makeVec3GL (mist.getRandPointInCircle (mist.getLeadPos(groupName), 10, 30))
+
+    if colour == "green" then
+		trigger.action.smoke(facaPosRandGL,0) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "red" then	
+		trigger.action.smoke(facaPosRandGL,1) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "white" then	
+		trigger.action.smoke(facaPosRandGL,2) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "orange" then	
+		trigger.action.smoke(facaPosRandGL,3) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	elseif colour == "blue" then	
+		trigger.action.smoke(facaPosRandGL,4) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+	end
+end
+
 function notify(message, displayFor) --activiy notify function
     trigger.action.outText(message, displayFor)
 end
@@ -217,6 +233,14 @@ debug("Start ACT_Support")
                     facMenu = missionCommands.addSubMenuForGroup(groupID, "FAC Commands")
                     missionCommands.addCommandForGroup(groupID, "Smoke blue forces", facMenu, markBlueForces)
                     missionCommands.addCommandForGroup(groupID, "Smoke red forces", facMenu, markRedForces)
+
+                    facMenuSmokeOwnPos = missionCommands.addSubMenuForGroup(groupID, "Smoke own position", facMenu)
+                    missionCommands.addCommandForGroup(groupID, "green", facMenuSmokeOwnPos, smokeSelf, groupName, "green")
+                    missionCommands.addCommandForGroup(groupID, "red", facMenuSmokeOwnPos, smokeSelf, groupName, "red")
+                    missionCommands.addCommandForGroup(groupID, "white", facMenuSmokeOwnPos, smokeSelf, groupName, "white")
+                    missionCommands.addCommandForGroup(groupID, "orange", facMenuSmokeOwnPos, smokeSelf, groupName, "orange")
+                    missionCommands.addCommandForGroup(groupID, "blue", facMenuSmokeOwnPos, smokeSelf, groupName, "blue")
+
                     debug("Added FAC F10")
                     facF10[i] = false
                 end

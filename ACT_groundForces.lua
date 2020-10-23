@@ -19,6 +19,8 @@
 
 -- Define Settings
 infantryBlueTemplates = {"blueInfantry"}
+infantryBlueCentreTemplates = {"blueInfantryCentre-1"}
+
 infantryRedTemplates  = {"redInfantry"}
 ambushRedTemplates = {"redAmbush"}
 
@@ -33,6 +35,9 @@ enableDebug = false
 refreshTimer = 300
 
 engDistance = 400 
+
+engDurationMin = 1200
+engDurationMax = 1800
 
 -- Declarations
 blueVec3array = {}
@@ -58,7 +63,7 @@ function spawnEngagements(amount)
         if engagementStates[i] == false then 
             debug("Spawning engagement")
             local vec3Zone = mist.utils.zoneToVec3(engagementZones[i])
-            spawnBlueAtVec3(vec3Zone)                                 --Spawn blue at zone centre, spawns normal template for now
+            spawnBlueCentre(vec3Zone)                          --Spawn blue at zone centre, spawns normal template for now
             
             local vec2BlueOffset = {                                  --Offset vector with zone radius
                 x = trigger.misc.getZone(engagementZones[i]).radius,
@@ -79,8 +84,8 @@ function spawnEngagements(amount)
                 local vec3Red = mist.vec.add(vec3Zone, mist.utils.makeVec3GL(vec2RedRotated))  
                 local vec3Red = mist.getRandPointInCircle(vec3Red, engDistance/3) --Add some randomization to spice it up
                 
-                spawnBlueAtVec3(vec3Blue)                                 --Spawn blue
-                spawnRedAtVec3(vec3Red)                                   --Spawn red
+                spawnBlueAtVec3(vec3Blue, false, vec3Red)            --Spawn blue
+                spawnRedAtVec3(vec3Red)                              --Spawn red
             end
             engagementStates[i] = true
         end
@@ -91,10 +96,10 @@ function debug(string)
     if enableDebug == true then
         trigger.action.outText(string, 5)
     end
-    env.error("__VIETSTAN__ :"..string, false)
+    env.error("__VIETSTAN__ : "..string, false)
 end
 
-function spawnBlueAtVec3(vec3Blue, vec3Red)
+function spawnBlueAtVec3(vec3Blue, tasking, vec3Red)
     local template = infantryBlueTemplates[math.random(1,#infantryBlueTemplates)] --Pick random template
     local groupTemp = Group.getByName(template)                     --Get template object
     local countryId = groupTemp:getUnit(1):getCountry()             --Get countryID of template
@@ -118,13 +123,40 @@ function spawnBlueAtVec3(vec3Blue, vec3Red)
     
     local setImmortal = { id = 'SetImmortal', params = {value = true}}
     controller:setCommand(setImmortal)
+    controller:setOption(0, 4)                                      --Set hold fire on start
 
-    --TODO: Task red
+    if tasking == true then
+        paramsBlue = {}
+        paramsBlue["groupString"] = groupString
+        paramsBlue["vec3Red"] = vec3Red
+        debug("Blue Task sent @"..tostring(vec3Red))
+        timer.scheduleFunction(taskBlue, paramsBlue, timer.getTime() + 2)
+    end
 
     debug("Spawned blue infantry")
 end
 
-function spawnRedAtVec3(vec3Red)                           --Spawns amount Red inf. to surround last spawned blue inf.
+function spawnBlueCentre(vec3Blue)
+    local template = infantryBlueCentreTemplates[math.random(1,#infantryBlueCentreTemplates)] --Pick random template
+    local groupTemp = Group.getByName(template)                     --Get template object
+    local countryId = groupTemp:getUnit(1):getCountry()             --Get countryID of template
+    local countryName = country.name[countryId]                     --Get country Name
+    local groupString = countryName.." gnd "..tostring(spawnIndex)  --Put above together to make groupName
+    
+    mist.teleportToPoint {
+        groupName = template,
+        point = vec3Blue,
+        action = "clone",
+        disperse = false,
+    }
+
+    blueVec3 = mist.getLeadPos(groupString)                         --Get pos of leader
+    blueVec3array[#blueVec3array + 1] =  blueVec3                   --Array length doubles as counter
+    blueNameArray[#blueNameArray + 1] = groupString
+    spawnIndex = spawnIndex + 1
+end
+
+function spawnRedAtVec3(vec3Red)                                   --Spawns amount Red inf. to surround last spawned blue inf.
     local template = infantryRedTemplates[math.random(1,#infantryRedTemplates)] --Pick random template
     local groupTemp = Group.getByName(template)                 --Get template object
     local countryId = groupTemp:getUnit(1):getCountry()         --Get countryID of template
@@ -142,6 +174,11 @@ function spawnRedAtVec3(vec3Red)                           --Spawns amount Red i
     redNameArray[#redNameArray + 1] = groupString
     spawnIndex = spawnIndex + 1  
 
+    local group = Group.getByName(groupString)
+    local controller = group:getController()
+
+    controller:setOption(0, 4)                                      --Set hold fire on start
+
     params = {}
     params["groupString"] = groupString
     params["blueIndex"] = #blueVec3array
@@ -149,6 +186,92 @@ function spawnRedAtVec3(vec3Red)                           --Spawns amount Red i
     timer.scheduleFunction(taskRed, params, timer.getTime() + 2)
 
     debug("Spawned red infantry "..tostring(#redVec3array))
+end
+
+function taskRed(args)
+    local group = Group.getByName(args["groupString"])
+    local vec3Red = mist.getLeadPos(args["groupString"])
+    local vec3Blue = blueVec3array[args["blueIndex"]]
+    
+    local dx = vec3Red.x - vec3Blue.x
+    local dz = vec3Red.z - vec3Blue.z
+    
+    fireVec2 = {
+        x = vec3Red.x - dx/10,
+        y = vec3Red.z - dz/10
+    }
+   
+    local controller = group:getController()    
+    controller:setOption(0, 2)                                         --Set open fire
+    
+    local fireTask = {                                         
+        id = 'FireAtPoint', 
+        params = {
+        point = fireVec2,                  
+        radius = 100, 
+        expendQty = 1e10,
+        expendQtyEnabled = true,
+        }
+       } 
+    controller:pushTask(fireTask)
+
+    timer.scheduleFunction(stopEngagement, args["groupString"], timer.getTime() + math.random(engDurationMin, engDurationMax))
+end
+
+function taskBlue(args)
+    local group = Group.getByName(args["groupString"])
+    local vec3Blue = mist.getLeadPos(args["groupString"])
+    local vec3Red = args["vec3Red"]
+
+    local dx = vec3Red.x - vec3Blue.x
+    local dz = vec3Red.z - vec3Blue.z
+    
+    fireVec2 = {
+        x = vec3Blue.x + dx/10,
+        y = vec3Blue.z + dz/10
+    }
+   
+    local controller = group:getController()    
+    controller:setOption(0, 2)                                         --Set open fire
+    local fireTask = {                                         
+        id = 'FireAtPoint', 
+        params = {
+        point = fireVec2,                  
+        radius = 100, 
+        expendQty = 1e10,
+        expendQtyEnabled = true,
+        }
+       } 
+    controller:pushTask(fireTask)
+    
+    timer.scheduleFunction(stopEngagement, args["groupString"], timer.getTime() + math.random(engDurationMin, engDurationMax))
+end
+
+function stopEngagement(groupName)
+    debug("Stopping engagement")
+    local group = Group.getByName(groupName)
+    local controller = group:getController()
+
+    controller:setOption(0, 4)                                          -- Set hold fire
+    controller.popTask(controller)
+                                                                        --TODO: cycle to start again ?
+end
+
+function genAmbush()
+    for i = 1, #ambushZones, 1 do
+        if ambushStates[i] == false and math.random(0,1) == 1 then
+            local template = ambushRedTemplates[math.random(1,#ambushRedTemplates)] --Pick random template
+            local groupTemp = Group.getByName(template)                 --Get template object
+            local countryId = groupTemp:getUnit(1):getCountry()         --Get countryID of template
+            local countryName = country.name[countryId]                 --Get country Name
+            local groupString = countryName.." gnd "..tostring(spawnIndex)--Put above together to make groupName
+    
+            mist.cloneInZone(template, ambushZones[i])                   --Spawn template group in zone
+			redNameArray[#redNameArray + 1] = groupString
+            spawnIndex = spawnIndex + 1
+            debug("Spawned Ambush") 
+        end
+    end
 end
 
 function checkHealth(groupName)
@@ -179,77 +302,6 @@ function arraySlice(array, slicedEntry)
     	end
 	end
 	return sliced
-end
-
-function taskRed(args)
-    local group = Group.getByName(args["groupString"])
-    local vec3Red = mist.getLeadPos(args["groupString"])
-    local vec3Blue = blueVec3array[args["blueIndex"]]
-    
-    local dx = vec3Red.x - vec3Blue.x
-    local dz = vec3Red.z - vec3Blue.z
-    
-    fireVec2 = {
-        x = vec3Red.x - dx/10,
-        y = vec3Red.z - dz/10
-    }
-   
-    local controller = group:getController()    
-        
-    local fireTask = {                                         
-        id = 'FireAtPoint', 
-        params = {
-        point = fireVec2,                  
-        radius = 100, 
-        expendQty = 1e10,
-        expendQtyEnabled = true,
-        }
-       } 
-    controller:pushTask(fireTask)
-end
-
-function taskBlue(args)
-    local group = Group.getByName(args["groupString"])
-    local vec3Blue = mist.getLeadPos(args["groupString"])
-    local vec3Red = redVec3array[args["redIndex"]]
-
-    local dx = vec3Blue.x - vec3Red.x
-    local dz = vec3Blue.z - vec3Red.z
-    
-    fireVec2 = {
-        x = vec3Red.x - dx/10,
-        y = vec3Red.z - dz/10
-    }
-   
-    local controller = group:getController()    
-        
-    local fireTask = {                                         
-        id = 'FireAtPoint', 
-        params = {
-        point = fireVec2,                  
-        radius = 100, 
-        expendQty = 1e10,
-        expendQtyEnabled = true,
-        }
-       } 
-    controller:pushTask(fireTask)
-end
-
-function genAmbush()
-    for i = 1, #ambushZones, 1 do
-        if ambushStates[i] == false and math.random(0,1) == 1 then
-            local template = ambushRedTemplates[math.random(1,#ambushRedTemplates)] --Pick random template
-            local groupTemp = Group.getByName(template)                 --Get template object
-            local countryId = groupTemp:getUnit(1):getCountry()         --Get countryID of template
-            local countryName = country.name[countryId]                 --Get country Name
-            local groupString = countryName.." gnd "..tostring(spawnIndex)--Put above together to make groupName
-    
-            mist.cloneInZone(template, ambushZones[i])                   --Spawn template group in zone
-			redNameArray[#redNameArray + 1] = groupString
-            spawnIndex = spawnIndex + 1
-            debug("Spawned Ambush") 
-        end
-    end
 end
 
 do

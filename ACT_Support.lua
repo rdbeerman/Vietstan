@@ -27,6 +27,7 @@ b52Time = timer.getTime()								--sets the initial clock runing on the b52 spaw
 b52Counter = -1 									    --Global variable for counting the might B52's we spawn
 b52vec3 = {}                                            --later used to pass b52 target co 
 attackHeading = 0
+selfSmokeColor = 0
 
 destThreshold = 0.65                                    --if a group falls below this amount of its inital strenght, it gets destroyed
 
@@ -132,24 +133,36 @@ function taskSmoke(vec3,colour) --spawn a smoke on a marker
 	debug("Smoke mission")
 end
 
-function smokeSelf(groupName, colour)
-    local facaPosRandGL = mist.utils.makeVec3GL (mist.getRandPointInCircle (mist.getLeadPos(groupName), 10, 30))
-
-    if colour == "green" then
-		trigger.action.smoke(facaPosRandGL,0) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-	elseif colour == "red" then	
-		trigger.action.smoke(facaPosRandGL,1) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-	elseif colour == "white" then	
-		trigger.action.smoke(facaPosRandGL,2) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-	elseif colour == "orange" then	
-		trigger.action.smoke(facaPosRandGL,3) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
-	elseif colour == "blue" then	
-		trigger.action.smoke(facaPosRandGL,4) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+function setSelfSmokeColor(color, groupID)
+    if color == "green" then
+        selfSmokeColor = 0 --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+        notifyToGroup(groupID, "Changed smoke color to green", 15)
+	elseif color == "red" then	
+        selfSmokeColor = 1 --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+        notifyToGroup(groupID, "Changed smoke color to red", 15)
+	elseif color == "white" then	
+        selfSmokeColor = 2 --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+        notifyToGroup(groupID, "Changed smoke color to white", 15)
+	elseif color == "orange" then	
+        selfSmokeColor = 3 --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+        notifyToGroup(groupID, "Changed smoke color to orange", 15)
+	elseif color == "blue" then	
+        selfSmokeColor = 4 --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
+        notifyToGroup(groupID, "Changed smoke color to blue", 15)
 	end
+end
+
+function dropSmoke(groupName)
+    local facaPosRandGL = mist.utils.makeVec3GL (mist.getRandPointInCircle (mist.getLeadPos(groupName), 10, 30))
+    trigger.action.smoke(facaPosRandGL,selfSmokeColor) --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
 end
 
 function notify(message, displayFor) --activiy notify function
     trigger.action.outText(message, displayFor)
+end
+
+function notifyToGroup(groupId, message, displayFor) --activiy notify function
+    trigger.action.outTextForGroup(groupId ,message, displayFor)
 end
 
 function setThreshold(mode)
@@ -234,12 +247,15 @@ debug("Start ACT_Support")
                     missionCommands.addCommandForGroup(groupID, "Smoke blue forces", facMenu, markBlueForces)
                     missionCommands.addCommandForGroup(groupID, "Smoke red forces", facMenu, markRedForces)
 
-                    facMenuSmokeOwnPos = missionCommands.addSubMenuForGroup(groupID, "Smoke own position", facMenu)
-                    missionCommands.addCommandForGroup(groupID, "green", facMenuSmokeOwnPos, smokeSelf, groupName, "green")
-                    missionCommands.addCommandForGroup(groupID, "red", facMenuSmokeOwnPos, smokeSelf, groupName, "red")
-                    missionCommands.addCommandForGroup(groupID, "white", facMenuSmokeOwnPos, smokeSelf, groupName, "white")
-                    missionCommands.addCommandForGroup(groupID, "orange", facMenuSmokeOwnPos, smokeSelf, groupName, "orange")
-                    missionCommands.addCommandForGroup(groupID, "blue", facMenuSmokeOwnPos, smokeSelf, groupName, "blue")
+                    missionCommands.addCommandForGroup(groupID, "drop Smoke", facMenu, dropSmoke, groupName)
+
+                    --change color
+                    facMenuChangeColor = missionCommands.addSubMenuForGroup(groupID, "change smoke color", facMenu)
+                    missionCommands.addCommandForGroup(groupID, "green", facMenuChangeColor, setSelfSmokeColor, "green", groupID)
+                    missionCommands.addCommandForGroup(groupID, "red", facMenuChangeColor, setSelfSmokeColor, "red", groupID)
+                    missionCommands.addCommandForGroup(groupID, "white", facMenuChangeColor, setSelfSmokeColor, "white", groupID)
+                    missionCommands.addCommandForGroup(groupID, "orange", facMenuChangeColor, setSelfSmokeColor, "orange", groupID)
+                    missionCommands.addCommandForGroup(groupID, "blue", facMenuChangeColor, setSelfSmokeColor, "blue", groupID)
 
                     debug("Added FAC F10")
                     facF10[i] = false

@@ -18,17 +18,17 @@
 	
 
 -- Define Settings
-infantryBlueTemplates = {"blueInfantry"}
-infantryBlueCentreTemplates = {"blueInfantryCentre-1"}
+infantryBlueTemplates = {}
+infantryBlueCentreTemplates = {}
 
-infantryRedTemplates  = {"redInfantry"}
-ambushRedTemplates = {"redAmbush"}
+infantryRedTemplates  = {}
+ambushRedTemplates = {}
 
 artyGroup = "artyGroup"
 bombGroup = "bombGroup"											
 
-engagementZones = {"zoneEngagement-1", "zoneEngagement-2"}
-ambushZones = {"zoneAmbush-1", "zoneAmbush-2"}
+engagementZones = {}
+ambushZones = {}
 
 enableDebug = false
 
@@ -49,14 +49,6 @@ ambushStates = {}
 
 
 spawnIndex = 1
-
-for i = 1, #engagementZones, 1 do
-    engagementStates[i] = false
-end
-
-for i = 1, #ambushZones, 1 do
-    ambushStates[i] = false
-end
 
 function spawnEngagements(amount)
     for i = 1, #engagementZones, 1 do
@@ -304,10 +296,58 @@ function arraySlice(array, slicedEntry)
 	return sliced
 end
 
+function templateArrayBuilder(type, arrayName, nameString) --1: groups; 2: zones
+    local i = 1
+    local _var = true
+    if type == 1 then --check for groups
+        while _var == true do
+            local groupName = nameString .. tostring(i)
+            if Group.getByName(groupName) ~= nil then
+                debug (groupName .. " exists")
+                arrayName[i] = groupName
+                i = i + 1
+            else
+                _var = false
+            end
+        end
+    elseif type == 2 then --check for zones
+        while _var == true do
+            local zoneName = nameString .. tostring(i)
+            if trigger.misc.getZone(zoneName) ~= nil then
+                debug (zoneName .. " exists")
+                arrayName[i] = zoneName
+                i = i + 1
+            else
+                _var = false
+            end
+        end
+    end
+end
+
 do
     debug("Starting init")
 
 -- Init scripts
+    --build templateArrays
+    --group Templates
+    templateArrayBuilder(1, infantryBlueTemplates, "blueInfantry-")
+    templateArrayBuilder(1, infantryBlueCentreTemplates, "blueInfantryCentre-")
+    templateArrayBuilder(1, infantryRedTemplates, "redInfantry-")
+    templateArrayBuilder(1, ambushRedTemplates, "redAmbush-")
+
+    --zone Templates
+    templateArrayBuilder(2, engagementZones, "zoneEngagement-")
+    templateArrayBuilder(2, ambushZones, "zoneAmbush-")
+
+    --must be down here, not a great solution. 
+    for i = 1, #engagementZones, 1 do
+        engagementStates[i] = false
+    end
+    
+    for i = 1, #ambushZones, 1 do
+        ambushStates[i] = false
+    end
+
     spawnEngagements(4)
     genAmbush()
 

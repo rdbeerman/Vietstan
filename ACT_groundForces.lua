@@ -36,8 +36,12 @@ refreshTimer = 300
 
 engDistance = 400 
 
-engDurationMin = 1200
-engDurationMax = 1800
+engStartTime = 600                                                  --Time between mission start and first engagement
+
+engDurationMin = 1800                                               --Min engagement duration
+engDurationMax = 2700                                               --Max engagement duration
+
+
 
 -- Declarations
 blueVec3array = {}
@@ -46,41 +50,42 @@ redVec3array = {}
 redNameArray = {}
 engagementStates = {}
 ambushStates = {}
-
+engTime = 0
+engTimeOld = 0
 
 spawnIndex = 1
 
 function spawnEngagements(amount)
     for i = 1, #engagementZones, 1 do
-        if engagementStates[i] == false then 
-            debug("Spawning engagement")
-            local vec3Zone = mist.utils.zoneToVec3(engagementZones[i])
-            spawnBlueCentre(vec3Zone)                          --Spawn blue at zone centre, spawns normal template for now
-            
-            local vec2BlueOffset = {                                  --Offset vector with zone radius
-                x = trigger.misc.getZone(engagementZones[i]).radius,
-                y = 0,
-            }
-            local vec2RedOffset = {                                   --Offset vector with zone radius + engDistance 
-                x = trigger.misc.getZone(engagementZones[i]).radius + engDistance,
-                y = 0,
-            }
+        debug("Spawning engagement")
+        local vec3Zone = mist.utils.zoneToVec3(engagementZones[i])
+        spawnBlueCentre(vec3Zone)                                 --Spawn blue at zone centre, spawns normal template for now
+        engTimeOld = engTime
+        engTime = math.random(engDurationMin, engDurationMax)    
+        
+        local vec2BlueOffset = {                                  --Offset vector with zone radius
+            x = trigger.misc.getZone(engagementZones[i]).radius,
+            y = 0,
+        }
+        local vec2RedOffset = {                                   --Offset vector with zone radius + engDistance 
+            x = trigger.misc.getZone(engagementZones[i]).radius + engDistance,
+            y = 0,
+        }
 
-            local angle = 2*math.pi/amount
+        local angle = 2*math.pi/amount
             
-            for i = 0, amount-1 do
-                local vec2BlueRotated = mist.vec.rotateVec2(vec2BlueOffset, angle*i )--rotate offset with angle * i
-                local vec3Blue = mist.vec.add(vec3Zone, mist.utils.makeVec3GL(vec2BlueRotated))
+        for i = 0, amount-1 do
+            local vec2BlueRotated = mist.vec.rotateVec2(vec2BlueOffset, angle*i )--rotate offset with angle * i
+            local vec3Blue = mist.vec.add(vec3Zone, mist.utils.makeVec3GL(vec2BlueRotated))
                 
-                local vec2RedRotated = mist.vec.rotateVec2(vec2RedOffset, angle*i)
-                local vec3Red = mist.vec.add(vec3Zone, mist.utils.makeVec3GL(vec2RedRotated))  
-                local vec3Red = mist.getRandPointInCircle(vec3Red, engDistance/3) --Add some randomization to spice it up
+            local vec2RedRotated = mist.vec.rotateVec2(vec2RedOffset, angle*i)
+            local vec3Red = mist.vec.add(vec3Zone, mist.utils.makeVec3GL(vec2RedRotated))  
+            local vec3Red = mist.getRandPointInCircle(vec3Red, engDistance/3) --Add some randomization to spice it up
                 
-                spawnBlueAtVec3(vec3Blue, false, vec3Red)            --Spawn blue
-                spawnRedAtVec3(vec3Red)                              --Spawn red
-            end
-            engagementStates[i] = true
+            spawnBlueAtVec3(vec3Blue, false, vec3Red)            --Spawn blue
+            spawnRedAtVec3(vec3Red)                              --Spawn red
         end
+        engagementStates[i] = false
     end
 end
 
@@ -122,7 +127,10 @@ function spawnBlueAtVec3(vec3Blue, tasking, vec3Red)
         paramsBlue["groupString"] = groupString
         paramsBlue["vec3Red"] = vec3Red
         debug("Blue Task sent @"..tostring(vec3Red))
-        timer.scheduleFunction(taskBlue, paramsBlue, timer.getTime() + 2)
+        local timing = engStartTime + (engTimeOld*#engagementStates)
+        debug("Tasking scheduled at: "..tostring(timing))
+        debug("Engagement duration is: "..tostring(engTime))
+        timer.scheduleFunction(taskBlue, paramsBlue, timer.getTime() + timing)
     end
 
     debug("Spawned blue infantry")
@@ -174,8 +182,12 @@ function spawnRedAtVec3(vec3Red)                                   --Spawns amou
     params = {}
     params["groupString"] = groupString
     params["blueIndex"] = #blueVec3array
+    params["engDuration"] = engTime
 
-    timer.scheduleFunction(taskRed, params, timer.getTime() + 2)
+    local timing = engStartTime + (engTimeOld*#engagementStates)
+    debug("Tasking scheduled at: "..tostring(timing))
+    debug("Engagement duration is: "..tostring(engTime))
+    timer.scheduleFunction(taskRed, params, timer.getTime() + timing)
 
     debug("Spawned red infantry "..tostring(#redVec3array))
 end
@@ -246,7 +258,6 @@ function stopEngagement(groupName)
 
     controller:setOption(0, 4)                                          -- Set hold fire
     controller.popTask(controller)
-                                                                        --TODO: cycle to start again ?
 end
 
 function genAmbush()
@@ -339,11 +350,7 @@ do
     templateArrayBuilder(2, engagementZones, "zoneEngagement-")
     templateArrayBuilder(2, ambushZones, "zoneAmbush-")
 
-    --must be down here, not a great solution. 
-    for i = 1, #engagementZones, 1 do
-        engagementStates[i] = false
-    end
-    
+    --must be down here, not a great solution.     
     for i = 1, #ambushZones, 1 do
         ambushStates[i] = false
     end

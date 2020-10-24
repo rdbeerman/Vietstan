@@ -134,7 +134,7 @@ function taskSmoke(vec3,colour) --spawn a smoke on a marker
 end
 
 function setSelfSmokeColor(color, groupID)
-    if color == "green" then
+    if color == "Green" then
         selfSmokeColor = 0 --vec3 and colour, 0 = green" 1= red" 2 = white 3 =orange 4= blue
         notifyToGroup(groupID, "Changed smoke color to green", 15)
 	elseif color == "red" then	
@@ -244,18 +244,18 @@ debug("Start ACT_Support")
                 if groupName == facGroup[i] and facF10[i] == true then
                     local groupID = group:getID()
                     facMenu = missionCommands.addSubMenuForGroup(groupID, "FAC Commands")
-                    missionCommands.addCommandForGroup(groupID, "Smoke blue forces", facMenu, markBlueForces)
-                    missionCommands.addCommandForGroup(groupID, "Smoke red forces", facMenu, markRedForces)
+                    missionCommands.addCommandForGroup(groupID, "Smoke mark on friendly infantry", facMenu, markBlueForces)
+                    --missionCommands.addCommandForGroup(groupID, "Smoke red forces", facMenu, markRedForces)
 
-                    missionCommands.addCommandForGroup(groupID, "drop Smoke", facMenu, dropSmoke, groupName)
+                    missionCommands.addCommandForGroup(groupID, "Drop smoke", facMenu, dropSmoke, groupName)
 
                     --change color
-                    facMenuChangeColor = missionCommands.addSubMenuForGroup(groupID, "change smoke color", facMenu)
-                    missionCommands.addCommandForGroup(groupID, "green", facMenuChangeColor, setSelfSmokeColor, "green", groupID)
-                    missionCommands.addCommandForGroup(groupID, "red", facMenuChangeColor, setSelfSmokeColor, "red", groupID)
-                    missionCommands.addCommandForGroup(groupID, "white", facMenuChangeColor, setSelfSmokeColor, "white", groupID)
-                    missionCommands.addCommandForGroup(groupID, "orange", facMenuChangeColor, setSelfSmokeColor, "orange", groupID)
-                    missionCommands.addCommandForGroup(groupID, "blue", facMenuChangeColor, setSelfSmokeColor, "blue", groupID)
+                    facMenuChangeColor = missionCommands.addSubMenuForGroup(groupID, "Change dropped smoke color", facMenu)
+                    missionCommands.addCommandForGroup(groupID, "Green", facMenuChangeColor, setSelfSmokeColor, "green", groupID)
+                    missionCommands.addCommandForGroup(groupID, "Red", facMenuChangeColor, setSelfSmokeColor, "red", groupID)
+                    missionCommands.addCommandForGroup(groupID, "White", facMenuChangeColor, setSelfSmokeColor, "white", groupID)
+                    missionCommands.addCommandForGroup(groupID, "Orange", facMenuChangeColor, setSelfSmokeColor, "orange", groupID)
+                    missionCommands.addCommandForGroup(groupID, "Blue", facMenuChangeColor, setSelfSmokeColor, "blue", groupID)
 
                     debug("Added FAC F10")
                     facF10[i] = false

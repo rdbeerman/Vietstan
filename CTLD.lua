@@ -281,7 +281,7 @@ ctld.loadableGroups = {
 --
 ctld.spawnableCrates = {
     -- name of the sub menu on F10 for spawning crates
-    ["Ground Forces"] = {
+    ["Ground Force Crates"] = {
         --crates you can spawn
         -- weight in KG
         -- Desc is the description on the F10 MENU
@@ -290,10 +290,10 @@ ctld.spawnableCrates = {
         -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
         { weight = 500, desc = "M113 APC", unit = "M113", side = 2 },
-        { weight = 400, desc = "Artillery", unit = "SAU Gvozdika", side = 2, cratesRequired = 2 },
+        { weight = 700, desc = "Artillery", unit = "SAU Gvozdika", side = 2, cratesRequired = 2 },
     },
     ["AA Crates"] = {
-        { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 300, desc = "Stinger", unit = "Stinger manpad", side = 2 },
     },
 }
 

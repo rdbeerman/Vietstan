@@ -74,7 +74,7 @@ ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a creat
 
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 
-ctld.crateWaitTime = 60 -- time in seconds to wait before you can spawn another crate
+ctld.crateWaitTime = 30 -- time in seconds to wait before you can spawn another crate
 
 ctld.forceCrateToBeMoved = false -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
 
@@ -281,7 +281,7 @@ ctld.loadableGroups = {
 --
 ctld.spawnableCrates = {
     -- name of the sub menu on F10 for spawning crates
-    ["Ground Force Crates"] = {
+    ["Crates"] = {
         --crates you can spawn
         -- weight in KG
         -- Desc is the description on the F10 MENU
@@ -289,11 +289,9 @@ ctld.spawnableCrates = {
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
         -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
-        { weight = 500, desc = "M113 APC", unit = "M113", side = 2 },
-        { weight = 700, desc = "Artillery", unit = "SAU Gvozdika", side = 2, cratesRequired = 2 },
-    },
-    ["AA Crates"] = {
-        { weight = 300, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 600, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 600, desc = "M113 APC", unit = "M-113", side = 2 },
+        { weight = 800, desc = "Artillery", unit = "SAU Gvozdika", side = 2, cratesRequired = 2 }
     },
 }
 

@@ -169,22 +169,22 @@ ctld.wpZones = {
 
 -- Use any of the predefined names or set your own ones
 ctld.transportPilotNames = {
-    "Mi-8 - Springfield 1 - 1",
-    "Mi-8 - Springfield 1 - 2",
-    "Mi-8 - Springfield 1 - 3",
-    "Mi-8 - Springfield 1 - 4",
-    "Mi-8 - Springfield 2 - 1",
-    "Mi-8 - Springfield 2 - 2",
-    "Mi-8 - Springfield 2 - 3",
-    "Mi-8 - Springfield 2 - 4",
-    "UH-1H - Enfield 1 - 1",
-    "UH-1H - Enfield 1 - 2",
-    "UH-1H - Enfield 1 - 3",
-    "UH-1H - Enfield 1 - 4",
-    "UH-1H - Enfield 2 - 1",
-    "UH-1H - Enfield 2 - 2",
-    "UH-1H - Enfield 2 - 3",
-    "UH-1H - Enfield 2 - 4"
+    "Mi-8 - Hippo 1 - 1",
+    "Mi-8 - Hippo 1 - 2",
+    "Mi-8 - Hippo 1 - 3",
+    "Mi-8 - Hippo 1 - 4",
+    "Mi-8 - Hippo 2 - 1",
+    "Mi-8 - Hippo 2 - 2",
+    "Mi-8 - Hippo 2 - 3",
+    "Mi-8 - Hippo 2 - 4",
+    "UH-1H - Hasty 1 - 1",
+    "UH-1H - Hasty 1 - 2",
+    "UH-1H - Hasty 1 - 3",
+    "UH-1H - Hasty 1 - 4",
+    "UH-1H - Hasty 2 - 1",
+    "UH-1H - Hasty 2 - 2",
+    "UH-1H - Hasty 2 - 3",
+    "UH-1H - Hasty 2 - 4"
 }
 
 -- *************** Optional Extractable GROUPS *****************

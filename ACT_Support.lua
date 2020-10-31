@@ -31,7 +31,7 @@ selfSmokeColor = 0
 
 destThreshold = 0.65                                    --if a group falls below this amount of its inital strenght, it gets destroyed
 
-facGroup = {"FACA - Yak-52", "FACA - F-86F", "FACA - L-39ZA", "FACA - TF-51D"}
+facGroup = {"FACA Alpha - Yak-52", "FACA Bravo - F-86F", "FACA - Charlie - L-39ZA", "FACA - Delta - TF-51D"}
 --Declerations
 
 artyCooldown = false

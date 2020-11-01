@@ -274,13 +274,13 @@ debug("Start ACT_Support")
         return old_onEvent(event)
     end
 --balancing test radio things:
-     radioBalancingSubMenu = missionCommands.addSubMenu ("set destThreshold:")
-     radioBalancingOption1 = missionCommands.addCommand ("destThreshold = 0.3", radioBalancingSubMenu, setThreshold, 1)
-     radioBalancingOption2 = missionCommands.addCommand ("destThreshold = 0.4", radioBalancingSubMenu, setThreshold, 2)
-     radioBalancingOption3 = missionCommands.addCommand ("destThreshold = 0.5", radioBalancingSubMenu, setThreshold, 3)
-     radioBalancingOption4 = missionCommands.addCommand ("destThreshold = 0.6", radioBalancingSubMenu, setThreshold, 4)
-     radioBalancingOption5 = missionCommands.addCommand ("destThreshold = 0.7", radioBalancingSubMenu, setThreshold, 5)
-     radioBalancingOption6 = missionCommands.addCommand ("destThreshold = 0.8", radioBalancingSubMenu, setThreshold, 6)
+     --radioBalancingSubMenu = missionCommands.addSubMenu ("set destThreshold:")
+     --radioBalancingOption1 = missionCommands.addCommand ("destThreshold = 0.3", radioBalancingSubMenu, setThreshold, 1)
+     --radioBalancingOption2 = missionCommands.addCommand ("destThreshold = 0.4", radioBalancingSubMenu, setThreshold, 2)
+     --radioBalancingOption3 = missionCommands.addCommand ("destThreshold = 0.5", radioBalancingSubMenu, setThreshold, 3)
+     --radioBalancingOption4 = missionCommands.addCommand ("destThreshold = 0.6", radioBalancingSubMenu, setThreshold, 4)
+     --radioBalancingOption5 = missionCommands.addCommand ("destThreshold = 0.7", radioBalancingSubMenu, setThreshold, 5)
+     --radioBalancingOption6 = missionCommands.addCommand ("destThreshold = 0.8", radioBalancingSubMenu, setThreshold, 6)
 
     debug("ACT_Support completed")
 end

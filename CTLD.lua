@@ -184,7 +184,15 @@ ctld.transportPilotNames = {
     "UH-1H - Hasty 2 - 1",
     "UH-1H - Hasty 2 - 2",
     "UH-1H - Hasty 2 - 3",
-    "UH-1H - Hasty 2 - 4"
+    "UH-1H - Hasty 2 - 4",
+    "UH-1H - Hasty 3 - 1",
+    "UH-1H - Hasty 3 - 2",
+    "UH-1H - Hasty 3 - 3",
+    "UH-1H - Hasty 3 - 4",
+    "UH-1H - Hasty 4 - 1",
+    "UH-1H - Hasty 4 - 2",
+    "UH-1H - Hasty 4 - 3",
+    "UH-1H - Hasty 4 - 4"
 }
 
 -- *************** Optional Extractable GROUPS *****************

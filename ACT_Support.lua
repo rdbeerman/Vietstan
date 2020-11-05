@@ -257,6 +257,9 @@ debug("Start ACT_Support")
                     missionCommands.addCommandForGroup(groupID, "Orange", facMenuChangeColor, setSelfSmokeColor, "orange", groupID)
                     missionCommands.addCommandForGroup(groupID, "Blue", facMenuChangeColor, setSelfSmokeColor, "blue", groupID)
 
+                    --Stop mission
+                    missionCommands.addCommandForGroup(groupID, "Stop Mission", facMenu, stopMission)
+
                     debug("Added FAC F10")
                     facF10[i] = false
                 end

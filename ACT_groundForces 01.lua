@@ -22,13 +22,13 @@ infantryBlueTemplates = {}
 infantryBlueCentreTemplates = {}
 
 infantryRedTemplates  = {}
-ambushRedTemplates = {}
+ambushRedTemplates = {"redAmbush-1","redAmbush-2"}
 
 artyGroup = "artyGroup"
 bombGroup = "bombGroup"											
 
 engagementZones = {}
-ambushZones = {}
+ambushZones = {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20",}
 
 enableDebug = false
 
@@ -36,7 +36,7 @@ refreshTimer = 300
 
 engDistance = 400 
 
-engStartTime = 600                                                  --Time between mission start and first engagement
+engStartTime = 1200                                                  --Time between mission start and first engagement
 
 engDurationMin = 1800                                               --Min engagement duration
 engDurationMax = 2700                                               --Max engagement duration
@@ -261,7 +261,7 @@ function stopEngagement(groupName)
 end
 
 function stopMission()
-    for i = 1, #redNameArray then
+    for i = 1, #redNameArray do
         stopEngagement(redNameArray[i])
     end
 end

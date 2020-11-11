@@ -266,6 +266,12 @@ function stopEngagement(groupName)
     controller.popTask(controller)
 end
 
+function stopMission()
+    for i = 1, #redNameArray do
+        stopEngagement(redNameArray[i])
+    end
+end
+
 function genAmbush()
     for i = 1, #ambushZones, 1 do
         if ambushStates[i] == false and math.random(0,1) == 1 then
@@ -313,7 +319,6 @@ function destroyRedGroup(groupName, index)
     Group.getByName(groupName):destroy()                                  --destroys the red group
     redNameArray = arraySlice(redNameArray, groupName)                    --removes the entry of the group from the redNameArray
     redTypeArray = indexSlice(redTypeArray, index)
-    --redVec3Array = indexSlice(redVec3Array, index)
     debug(groupName .. " destroyed!")
 end
 
@@ -321,7 +326,6 @@ function respawnRedGroup(vec3)
     if redRespawnCounter >= 1 then
         local vec3new = mist.getRandPointInCircle(vec3, redRespawnOffset) --Add some randomization to spice it up
         timer.scheduleFunction(spawnRedAtVec3, vec3new, timer.getTime() + redRespawnTimer) 
-        --spawnRedAtVec3(vec3new)
         redRespawnCounter = redRespawnCounter - 1
         debug("respawned group. New Respawncounter = " .. redRespawnCounter)
     else

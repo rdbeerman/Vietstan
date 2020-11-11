@@ -30,16 +30,20 @@ bombGroup = "bombGroup"
 engagementZones = {}
 ambushZones = {}
 
-enableDebug = false
+enableDebug = true
 
 refreshTimer = 300
 
 engDistance = 400 
 
-engStartTime = 600                                                  --Time between mission start and first engagement
+engStartTime = 5                                                  --Time between mission start and first engagement
 
 engDurationMin = 1800                                               --Min engagement duration
 engDurationMax = 2700                                               --Max engagement duration
+
+redRespawnCounter = 10
+redRespawnOffset = 100
+redRespawnTimer = 10
 
 
 
@@ -48,6 +52,7 @@ blueVec3array = {}
 blueNameArray = {}
 redVec3array = {}
 redNameArray = {}
+redTypeArray = {}
 engagementStates = {}
 ambushStates = {}
 engTime = 0
@@ -172,6 +177,7 @@ function spawnRedAtVec3(vec3Red)                                   --Spawns amou
 
     redVec3array[#redVec3array + 1] =  vec3Red
     redNameArray[#redNameArray + 1] = groupString
+    redTypeArray[#redTypeArray + 1] = 1
     spawnIndex = spawnIndex + 1  
 
     local group = Group.getByName(groupString)
@@ -261,7 +267,7 @@ function stopEngagement(groupName)
 end
 
 function stopMission()
-    for i = 1, #redNameArray then
+    for i = 1, #redNameArray do
         stopEngagement(redNameArray[i])
     end
 end
@@ -276,8 +282,12 @@ function genAmbush()
             local groupString = countryName.." gnd "..tostring(spawnIndex)--Put above together to make groupName
     
             mist.cloneInZone(template, ambushZones[i])                   --Spawn template group in zone
-			redNameArray[#redNameArray + 1] = groupString
+
+            redVec3array[#redVec3array + 1] =  mist.utils.zoneToVec3(ambushZones[i])
+            redNameArray[#redNameArray + 1] = groupString
+            redTypeArray[#redTypeArray + 1] = 0
             spawnIndex = spawnIndex + 1
+
             debug("Spawned Ambush") 
         end
     end
@@ -291,22 +301,52 @@ function checkHealth(groupName)
 
             debug(groupName .. ": " .. "initial size: " .. initialSize .. "; current size " .. currentSize) --is current size is off by +1 for some reason
             if (currentSize-1) / initialSize <= destThreshold then      --checks if a unit is below the destruction threshold. the -1 is because DCS seems to report them offset by one, debugs shows the "true" numbers.
-                destroyRedGroup(groupName)
+
+                local _redVec3temp = redVec3array[i]
+                local _redTypeTemp = redTypeArray[i]
+                redVec3array = arraySlice(redVec3array, _redVec3temp)
+                destroyRedGroup(groupName, i)
+
+                if _redTypeTemp == 1 then
+                    respawnRedGroup(_redVec3temp)
+                end
             end
         end
     end
 end
 
-function destroyRedGroup(groupName)
+function destroyRedGroup(groupName, index)
     Group.getByName(groupName):destroy()                                  --destroys the red group
-    redNameArray = arraySlice(redNameArray, groupName)                    --removes the entry of the group from the redNameArray                                  
+    redNameArray = arraySlice(redNameArray, groupName)                    --removes the entry of the group from the redNameArray
+    redTypeArray = indexSlice(redTypeArray, index)
     debug(groupName .. " destroyed!")
+end
+
+function respawnRedGroup(vec3)
+    if redRespawnCounter >= 1 then
+        local vec3new = mist.getRandPointInCircle(vec3, redRespawnOffset) --Add some randomization to spice it up
+        timer.scheduleFunction(spawnRedAtVec3, vec3new, timer.getTime() + redRespawnTimer) 
+        redRespawnCounter = redRespawnCounter - 1
+        debug("respawned group. New Respawncounter = " .. redRespawnCounter)
+    else
+        debug("no respawns available. Respawncounter = " .. redRespawnCounter)
+    end
 end
 
 function arraySlice(array, slicedEntry)
 	local sliced = {}
 	for i = 1, #array, 1 do
     	if array[i] ~= slicedEntry then
+    		sliced[#sliced+1] = array[i]
+    	end
+	end
+	return sliced
+end
+
+function indexSlice(array, slicedIndex)
+	local sliced = {}
+	for i = 1, #array, 1 do
+    	if i ~= slicedIndex then
     		sliced[#sliced+1] = array[i]
     	end
 	end

@@ -30,13 +30,13 @@ bombGroup = "bombGroup"
 engagementZones = {}
 ambushZones = {}
 
-enableDebug = true
+enableDebug = false
 
 refreshTimer = 300
 
 engDistance = 400 
 
-engStartTime = 5                                                  --Time between mission start and first engagement
+engStartTime = 600                                                  --Time between mission start and first engagement
 
 engDurationMin = 1800                                               --Min engagement duration
 engDurationMax = 2700                                               --Max engagement duration
@@ -45,7 +45,7 @@ redRespawnCounter = 10
 redRespawnOffset = 100
 redRespawnTimer = 10
 
-
+--medivacTimer = 1200                                                 --Time between medivac spawning
 
 -- Declarations
 blueVec3array = {}
@@ -95,10 +95,17 @@ function spawnEngagements(amount)
 end
 
 function debug(string)
-    if enableDebug == true then
-        trigger.action.outText(string, 5)
+    if string ~= nil then
+        if enableDebug == true then
+            trigger.action.outText(string, 5)
+        end
+        env.error("__VIETSTAN__ : "..string, false)
+    elseif string == nil then
+        if enableDebug == true then
+            trigger.action.outText("debug got passed nil", 5)
+        end
+        env.error("__VIETSTAN__ : debug got passed nil", false)
     end
-    env.error("__VIETSTAN__ : "..string, false)
 end
 
 function spawnBlueAtVec3(vec3Blue, tasking, vec3Red)
@@ -185,12 +192,23 @@ function spawnRedAtVec3(vec3Red)                                   --Spawns amou
 
     controller:setOption(0, 4)                                      --Set hold fire on start
 
+    for i = 1, #blueVec3array do 
+        local distance =  mist.utils.get2DDist(vec3Red, blueVec3array[i])
+        if distance <= engDistance + 100 then
+            blueIndex = i
+        end
+    end 
+
+    if blueIndex == nil then
+        blueIndex = 1
+    end
+    
     params = {}
     params["groupString"] = groupString
-    params["blueIndex"] = #blueVec3array
+    params["blueIndex"] = blueIndex
     params["engDuration"] = engTime
 
-    local timing = engStartTime + (engTimeOld*#engagementStates)
+    local timing = engStartTime -- + (engTimeOld*#engagementStates)
     debug("Tasking scheduled at: "..tostring(timing))
     debug("Engagement duration is: "..tostring(engTime))
     timer.scheduleFunction(taskRed, params, timer.getTime() + timing)
@@ -201,6 +219,7 @@ end
 function taskRed(args)
     local group = Group.getByName(args["groupString"])
     local vec3Red = mist.getLeadPos(args["groupString"])
+    debug("__ "..tostring(args["blueIndex"]))
     local vec3Blue = blueVec3array[args["blueIndex"]]
     
     local dx = vec3Red.x - vec3Blue.x
@@ -322,7 +341,7 @@ function destroyRedGroup(groupName, index)
     debug(groupName .. " destroyed!")
 end
 
-function respawnRedGroup(vec3)
+function respawnRedGroup(vec3, target)
     if redRespawnCounter >= 1 then
         local vec3new = mist.getRandPointInCircle(vec3, redRespawnOffset) --Add some randomization to spice it up
         timer.scheduleFunction(spawnRedAtVec3, vec3new, timer.getTime() + redRespawnTimer) 

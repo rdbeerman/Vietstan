@@ -43,9 +43,9 @@ engDurationMax = 2700                                               --Max engage
 
 redRespawnCounter = 10
 redRespawnOffset = 100
-redRespawnTimer = 10
+redRespawnTimer = 120
 
---medivacTimer = 1200                                                 --Time between medivac spawning
+medivacTimer = 2000                                                 --Time between medivac spawning
 
 -- Declarations
 blueVec3array = {}
@@ -57,6 +57,10 @@ engagementStates = {}
 ambushStates = {}
 engTime = 0
 engTimeOld = 0
+
+medivacState = false
+medivacCounter = 0
+medivacFlag = 100
 
 spawnIndex = 1
 
@@ -91,6 +95,8 @@ function spawnEngagements(amount)
             spawnRedAtVec3(vec3Red)                              --Spawn red
         end
         engagementStates[i] = false
+
+        --timer.scheduleFunction(genMedivac, engagementZones[i], timer.getTime() + engStartTime + medivacTimer)
     end
 end
 
@@ -219,7 +225,7 @@ end
 function taskRed(args)
     local group = Group.getByName(args["groupString"])
     local vec3Red = mist.getLeadPos(args["groupString"])
-    debug("__ "..tostring(args["blueIndex"]))
+    debug("Tasked"..tostring(args["blueIndex"]))
     local vec3Blue = blueVec3array[args["blueIndex"]]
     
     local dx = vec3Red.x - vec3Blue.x
@@ -370,6 +376,41 @@ function indexSlice(array, slicedIndex)
     	end
 	end
 	return sliced
+end
+
+function genMedivac(zone)
+    --ctld.spawnGroupAtPoint("blue", 1, vec3, 0)        --Doesn't work, may need to build own array
+    local _vec3 = mist.utils.zoneToVec3(zone)
+    trigger.action.smoke(_vec3, 0)
+
+    medivacState = true
+    medivacCounter = medivacCounter + 1
+
+    timer.scheduleFunction(checkMedivac, zone, timer.getTime() + 5)
+
+    trigger.action.outText("Requesting immediate medivac on white smoke!", 5)
+    debug("Generated medivac")
+end
+
+function checkMedivac(zone)
+    local count = 0
+    
+    for i = 0, #ctld.pickupZones do
+        --ctld.countDroppedGroupsInZone(ctld.pickupZones[i][1], medivacFlag, medivacFlag+1)
+
+        count = trigger.misc.getUserFlag(medivacFlag)
+    end
+    
+
+    if count == medivacCounter then
+        medivacState = false
+        timer.scheduleFunction(genMedivac, zone, timer.getTime() + medivacTimer)
+        trigger.action.outText("Medivac completed")
+        debug("Medivac completed, scheduling new")
+        return
+    else
+        timer.scheduleFunction(checkMedivac, zone, timer.getTime() + 5)
+    end
 end
 
 function templateArrayBuilder(type, arrayName, nameString) --1: groups; 2: zones

@@ -18,7 +18,7 @@
 ]]--
 
 --Settings
-smokeCooldownTimer = 120                                --shortest amount of time in seconds a smoke can be called in
+smokeCooldownTimer = 30                                --shortest amount of time in seconds a smoke can be called in
 smokeTime = timer.getTime()
 artyCooldownTimer = 120                                 --shortest amount of time in seconds an arty strike can be called in
 artyTime = timer.getTime()

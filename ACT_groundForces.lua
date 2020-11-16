@@ -29,25 +29,32 @@ bombGroup = "bombGroup"
 
 engagementZones = {}
 ambushZones = {}
+pickupZones = {}
 
 enableDebug = false
 
 refreshTimer = 300
 
-engDistance = 400 
+engDistance = 500 
 
-engStartTime = 1200                                                  --Time between mission start and first engagement
+engStartTime = 600                                                 --Time between mission start and first engagement
 
-engDurationMin = 1800                                               --Min engagement duration
-engDurationMax = 2700                                               --Max engagement duration
+engDurationMin = 2700                                               --Min engagement duration
+engDurationMax = 3600                                               --Max engagement duration
 
 redRespawnCounter = 30
-redRespawnOffset = 100
-redRespawnTimer = 300
+redRespawnOffset = 400
+redRespawnTimerMin = 200
+redRespawnTimerMax = 600
 
---medivacTimer = 1200                                                 --Time between medivac spawning
+medevacTimerMin = 600                                              --Time between medevac spawning
+medevacTimerMax = 1000
 
 -- Declarations
+ACT = {}
+ACT.medevacState = false
+ACT.medevacEnd =   false
+
 blueVec3array = {}
 blueNameArray = {}
 redVec3array = {}
@@ -57,6 +64,9 @@ engagementStates = {}
 ambushStates = {}
 engTime = 0
 engTimeOld = 0
+
+medevacCount = 0
+medevacFlag = 100
 
 spawnIndex = 1
 
@@ -87,8 +97,8 @@ function spawnEngagements(amount)
             local vec3Red = mist.vec.add(vec3Zone, mist.utils.makeVec3GL(vec2RedRotated))  
             local vec3Red = mist.getRandPointInCircle(vec3Red, engDistance/3) --Add some randomization to spice it up
                 
-            spawnBlueAtVec3(vec3Blue, false, vec3Red)            --Spawn blue
-            spawnRedAtVec3(vec3Red)                              --Spawn red
+            spawnBlueAtVec3(vec3Blue, false, vec3Red)               --Spawn blue
+            spawnRedAtVec3(vec3Red)                                 --Spawn red
         end
         engagementStates[i] = false
     end
@@ -166,6 +176,8 @@ function spawnBlueCentre(vec3Blue)
     blueVec3array[#blueVec3array + 1] =  blueVec3                   --Array length doubles as counter
     blueNameArray[#blueNameArray + 1] = groupString
     spawnIndex = spawnIndex + 1
+
+    timer.scheduleFunction(genMedevac, blueVec3, timer.getTime() + engStartTime + math.random(medevacTimerMin, medevacTimerMax))
 end
 
 function spawnRedAtVec3(vec3Red)                                   --Spawns amount Red inf. to surround last spawned blue inf.
@@ -219,7 +231,6 @@ end
 function taskRed(args)
     local group = Group.getByName(args["groupString"])
     local vec3Red = mist.getLeadPos(args["groupString"])
-    debug("__ "..tostring(args["blueIndex"]))
     local vec3Blue = blueVec3array[args["blueIndex"]]
     
     local dx = vec3Red.x - vec3Blue.x
@@ -270,7 +281,7 @@ function taskBlue(args)
         expendQty = 1e10,
         expendQtyEnabled = true,
         }
-       } 
+    } 
     controller:pushTask(fireTask)
     
     timer.scheduleFunction(stopEngagement, args["groupString"], timer.getTime() + math.random(engDurationMin, engDurationMax))
@@ -283,6 +294,8 @@ function stopEngagement(groupName)
 
     controller:setOption(0, 4)                                          -- Set hold fire
     controller.popTask(controller)
+
+    ACT.medevacEnd = true
 end
 
 function stopMission()
@@ -309,6 +322,44 @@ function genAmbush()
 
             debug("Spawned Ambush") 
         end
+    end
+end
+
+function genMedevac(vec3Input)
+    trigger.action.smoke(vec3Input, 2)
+    ctld.spawnGroupAtPoint("blue", 1, vec3Input, 0)
+    trigger.action.outText("Immediate medevac requested at white smoke!", 5)
+    debug("Generated Medevac")
+
+    args = {}
+    args["vec3Input"] = vec3Input
+    args["index"] = spawnIndex
+
+    timer.scheduleFunction(checkMedevac, args, timer.getTime() + 5)
+    spawnIndex = spawnIndex + 1
+    ACT.medevacState = true
+    medevacCount = medevacCount + 1
+end
+
+function checkMedevac(args)
+    local group = Group.getByName(ctld.droppedTroopsBLUE[#ctld.droppedTroopsBLUE])
+
+    if group ~= nil then                        --If the dropped group exists, task to hold
+        local controller = group:getController()
+        local holdTask = { 
+            id = 'Hold', 
+            params = { 
+            } 
+        }
+
+        controller:pushTask(holdTask)
+    end
+    
+    if ACT.medevacState == false then
+        trigger.action.outText("Medevac dropped off", 5)
+        timer.scheduleFunction(genMedevac, args["vec3Input"], timer.getTime() + math.random(medevacTimerMin, medevacTimerMax ))
+    elseif ACT.medevacEnd == false then
+        timer.scheduleFunction(checkMedevac, args, timer.getTime() + 5)
     end
 end
 
@@ -344,7 +395,7 @@ end
 function respawnRedGroup(vec3, target)
     if redRespawnCounter >= 1 then
         local vec3new = mist.getRandPointInCircle(vec3, redRespawnOffset) --Add some randomization to spice it up
-        timer.scheduleFunction(spawnRedAtVec3, vec3new, timer.getTime() + redRespawnTimer) 
+        timer.scheduleFunction(spawnRedAtVec3, vec3new, timer.getTime() + math.random(redRespawnTimerMin, redRespawnTimerMax)) 
         redRespawnCounter = redRespawnCounter - 1
         debug("respawned group. New Respawncounter = " .. redRespawnCounter)
     else
@@ -414,6 +465,7 @@ do
     --zone Templates
     templateArrayBuilder(2, engagementZones, "zoneEngagement-")
     templateArrayBuilder(2, ambushZones, "zoneAmbush-")
+    templateArrayBuilder(2, pickupZones, "infPickup-")
 
     --must be down here, not a great solution.     
     for i = 1, #ambushZones, 1 do

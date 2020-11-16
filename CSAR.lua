@@ -35,7 +35,9 @@ csar.csarUnits = {
     "UH-1H - Hasty 4 - 1",
     "UH-1H - Hasty 4 - 2",
     "UH-1H - Hasty 4 - 3",
-    "UH-1H - Hasty 4 - 4"
+    "UH-1H - Hasty 4 - 4",
+    "FACA - Delta - TF-51D",
+    "FACA Alpha - Yak-52"
 } -- List of all the MEDEVAC _UNIT NAMES_ (the line where it says "Pilot" in the ME)!
 
 csar.bluemash = {

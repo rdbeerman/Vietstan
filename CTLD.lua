@@ -40,14 +40,14 @@ ctld.slingLoad = true -- if false, crates can be used WITHOUT slingloading, by h
 
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 
-ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
+ctld.maxExtractDistance = 200 -- max distance from vehicle to troops to allow a group extraction
 ctld.maximumDistanceLogistic = 100 -- max distance from vehicle to logistics to allow a loading or spawning operation
 ctld.maximumSearchDistance = 2000 -- max distance for troops to search for enemy
-ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop point if no enemy is nearby
+ctld.maximumMoveDistance = 500 -- max distance for troops to move from drop point if no enemy is nearby
 
 ctld.minimumDeployDistance = 10 -- minimum distance from a friendly pickup zone where you can deploy a crate
 
-ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130 
+ctld.numberOfTroops = 6 -- default number of troops to load on a transport heli or C-130 
 							-- also works as maximum size of group that'll fit into a helicopter unless overridden
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
 ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
@@ -276,11 +276,11 @@ ctld.unitActions = {
 -- You can also add an optional coalition side to limit the group to one side
 -- for the side - 2 is BLUE and 1 is RED
 ctld.loadableGroups = {
-    {name = "Rifle Squad", inf = 6, mg = 2 }, -- will make a loadable group with 5 infantry, 2 MGs and 2 anti-tank for both coalitions
-    {name = "Recon Squad", inf = 2,},
-    {name = "Mortar Squad", inf = 4, mortar = 4 },
-    {name = "Anti-Air Squad", inf = 4, aa = 6},
-    {name = "Medic Squad", inf = 6},
+    {name = "Rifle Squad", inf = 6 }, -- will make a loadable group with 5 infantry, 2 MGs and 2 anti-tank for both coalitions
+    {name = "Recon Squad", inf = 2},
+    --{name = "Mortar Squad", inf = 4, mortar = 4 },
+    {name = "Anti-Air Squad", aa = 4},
+    {name = "Medic Squad", inf = 2},
 }
 
 -- ************** SPAWNABLE CRATES ******************
@@ -1961,6 +1961,8 @@ function ctld.unloadTroops(_args)
                 ctld.processCallback({unit = _heli, unloaded = ctld.inTransitTroops[_heli:getName()].troops, action = "unload_troops_zone"})
 
                 ctld.inTransitTroops[_heli:getName()].troops = nil
+
+                ACT.medevacState = false
 
             else
                 ctld.displayMessageToGroup(_heli, "Dropped vehicles back to base", 20)

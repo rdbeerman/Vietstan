@@ -8,51 +8,122 @@
     --      1. Set zones
 
 chbl = {}
-
-chbl.unitsInZone = {}
-chbl.groupsInZone = {}
-
 -- Settings
-chbl.reactorPos = mist.utils.zoneToVec3("reactorInner")
+chbl.reactorPos = mist.vec.add(mist.utils.zoneToVec3("reactorInner"), {x= 0, y = 40, z = 0})
 chbl.zoneInner = "reactorInner"
 chbl.zoneMedium = "reactorMedium"
 chbl.zoneOuter = "reactorOuter"
+chbl.zoneInit = "reactorInit"
 
 chbl.zoneStatic = "tower"
 
-function chbl.detectCargo()
-    -- detect cargo in zone
-end
+chbl.coreDose = 10 -- In roentgen per second at core roof
+
+chbl.enableDebug = false
+
+-- Declaration
+chbl.unitsInZone = {}
+chbl.groupsInZone = {}
+chbl.groupsZoneNew = {}
+chbl.groupsZoneOld = {}
+
+chbl.groupsDose = {}
 
 function chbl.detectInZone()
-    chbl.unitsInZone = mist.getUnitsInZones(mist.makeUnitTable({"[blue][helicopter]"}), {"reactorOuter"})
+    chbl.unitsInZone = mist.getUnitsInZones(mist.makeUnitTable({"[blue][helicopter]"}), {chbl.zoneInit})
 
     for i = 1, #chbl.unitsInZone do
         _unit = chbl.unitsInZone[i]
         _group = _unit:getGroup()
-        
+        chbl.groupsInZone[_group:getName()] = _group:getName()
+
         _distance = mist.utils.get2DDist(chbl.reactorPos, mist.getLeadPos(_group:getName()))
+        chbl.groupsZoneOld[_group:getName()] = chbl.groupsZoneNew[_group:getName()]
+
+        chbl.dosimeter(_group)
+
+        if _distance >= trigger.misc.getZone(chbl.zoneOuter).radius then       --Radius bigger than outer, so in init zone
+            chbl.debug(_unit:getPlayerName().." is in init Zone ")
+            chbl.groupsZoneNew[_group:getName()] = chbl.zoneInit
+            
+        elseif _distance >= trigger.misc.getZone(chbl.zoneMedium).radius then     --Radius is more than medium, so outer zone
+            chbl.groupsZoneNew[_group:getName()] = chbl.zoneOuter
+            
+            if chbl.groupsZoneNew[_group:getName()] ~= chbl.groupsZoneOld[_group:getName()] then
+                chbl.debug(_unit:getPlayerName().." entered Outer zone ")
+                trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerLow.wav" )
+                timer.scheduleFunction(chbl.geiger, _group, timer.getTime() + 5)
+            end
         
-        if _distance >= trigger.misc.getZone(chbl.zoneMedium).radius then       --Radius is more than medium, so outer zone
-            trigger.action.outTextForGroup(_group:getID(), "Outer Zone", 1, true)
-            trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerLow.wav" )
         elseif _distance >= trigger.misc.getZone(chbl.zoneInner).radius and     --Radius between inner and medium, so medium zone
                 _distance <= trigger.misc.getZone(chbl.zoneOuter).radius then
-            trigger.action.outTextForGroup(_group:getID(), "Medium Zone", 1, true)
-            trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerMed.wav" )
-        else                                                                    --Last option left is inner zone
-            trigger.action.outTextForGroup(_group:getID(), "Inner Zone", 1, true)
+            chbl.groupsZoneNew[_group:getName()] = chbl.zoneMedium
+            if chbl.groupsZoneNew[_group:getName()] ~= chbl.groupsZoneOld[_group:getName()] then
+                chbl.debug(_unit:getPlayerName().." entered Medium zone ")
+                trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerMed.wav" )
+                timer.scheduleFunction(chbl.geiger, _group, timer.getTime() + 5)
+            end
+
+        elseif _distance <= trigger.misc.getZone(chbl.zoneInner).radius then    --Last option left is inner zone
+            chbl.groupsZoneNew[_group:getName()] = chbl.zoneInner
+            if chbl.groupsZoneNew[_group:getName()] ~= chbl.groupsZoneOld[_group:getName()] then
+                chbl.debug(_unit:getPlayerName().." entered Inner zone ")
+                trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerHigh.wav" )
+                timer.scheduleFunction(chbl.geiger, _group, timer.getTime() + 5)
+            end
         end 
     end
-    timer.scheduleFunction(chbl.detectInZone, nil, timer.getTime() + 2)         --TODO: decouple sound and pos check (updateaudio function)
+    timer.scheduleFunction(chbl.detectInZone, nil, timer.getTime() + 1)         --TODO: decouple sound and pos check (updateaudio function)
 end
 
-function chbl.geigerCounter(_group)
-    --Play sound if in zone, after clip length passes play again if still in zone
+function chbl.geiger(_group) -- check oldzone vs newzone here too, if same, reschedule, if not, stop
+    local _zoneNew = chbl.groupsZoneNew[_group:getName()]
+    local _zoneOld = chbl.groupsZoneOld[_group:getName()]
+
+    if _zoneNew == _zoneOld and _zoneNew == chbl.zoneOuter then
+        trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerLow.wav" )
+        timer.scheduleFunction(chbl.geiger, _group, timer.getTime() + 5)
+    elseif _zoneNew == _zoneOld and _zoneNew == chbl.zoneMedium then
+        trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerMed.wav" )
+        timer.scheduleFunction(chbl.geiger, _group, timer.getTime() + 5)
+    elseif _zoneNew == _zoneOld and _zoneNew == chbl.zoneInner then
+        trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerHigh.wav" )
+        timer.scheduleFunction(chbl.geiger, _group, timer.getTime() + 5)
+    end
 end
 
-function chbl.dosimeter()
-    --counts if in zones, summarizes
+function chbl.dosimeter(_group)
+    local _zone = chbl.groupsZoneNew[_group:getName()]
+    
+    local _corePos = chbl.reactorPos
+    
+    local _distance = mist.utils.get3DDist(chbl.reactorPos, mist.getLeadPos(_group:getName()))
+
+    local _dose = chbl.coreDose / ( _distance/10 * _distance/10 )
+    
+    if chbl.groupsDose[_group:getName()] == nil then
+        chbl.groupsDose[_group:getName()] = 0
+    end
+    
+    chbl.groupsDose[_group:getName()] = chbl.groupsDose[_group:getName()] + _dose
+
+    local _message = "Current reading: ".._dose.."R/s \nTotal Dose: "..chbl.groupsDose[_group:getName()].." Roentgen"
+    trigger.action.outTextForGroup(_group:getID(), _message, 1, true)
+end
+
+function chbl.debug(_string)
+    local _string = tostring(_string) 
+    if _string ~= nil then
+        if chbl.enableDebug == true then
+            trigger.action.outText(_string, 5)
+        end
+        env.error("__Chernobyl__ : ".._string, false)
+    elseif _string == nil then
+        if chbl.enableDebug == true then
+            trigger.action.outText("debug got passed nil", 5)
+        end
+        env.error("__Chernobyl__ : debug got passed nil", false)
+    end
 end
 
 function chbl.spawnTower()

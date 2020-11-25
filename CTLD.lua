@@ -200,6 +200,16 @@ ctld.transportPilotNames = {
 -- Use any of the predefined names or set your own ones
 
 ctld.extractableGroups = {
+    "pickupGroup-1",
+    "pickupGroup-2",
+    "pickupGroup-3",
+    "pickupGroup-4",
+    "pickupGroup-5",
+    "pickupGroup-6",
+    "pickupGroup-7",
+    "pickupGroup-8",
+    "pickupGroup-9",
+    "pickupGroup-10",
 }
 
 -- ************** Logistics UNITS FOR CRATE SPAWNING ******************

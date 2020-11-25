@@ -9,7 +9,8 @@
 
 chbl = {}
 -- Settings
-chbl.reactorPos = mist.vec.add(mist.utils.zoneToVec3("reactorInner"), {x= 0, y = 40, z = 0})
+chbl.reactorPos = mist.vec.add(mist.utils.zoneToVec3("reactorCore"), {x= 0, y = 40, z = 0})
+chbl.zoneCore = "reactorCore"
 chbl.zoneInner = "reactorInner"
 chbl.zoneMedium = "reactorMedium"
 chbl.zoneOuter = "reactorOuter"
@@ -17,7 +18,8 @@ chbl.zoneInit = "reactorInit"
 
 chbl.zoneStatic = "tower"
 
-chbl.coreDose = 10 -- In roentgen per second at core roof
+chbl.coreDose = 50 -- In roentgen per second at core roof
+chbl.backgroundDose = 0.01
 
 chbl.enableDebug = false
 
@@ -35,6 +37,11 @@ function chbl.detectInZone()
     for i = 1, #chbl.unitsInZone do
         _unit = chbl.unitsInZone[i]
         _group = _unit:getGroup()
+
+        if _group == nil then
+            break
+        end
+        
         chbl.groupsInZone[_group:getName()] = _group:getName()
 
         _distance = mist.utils.get2DDist(chbl.reactorPos, mist.getLeadPos(_group:getName()))
@@ -68,7 +75,7 @@ function chbl.detectInZone()
             chbl.groupsZoneNew[_group:getName()] = chbl.zoneInner
             if chbl.groupsZoneNew[_group:getName()] ~= chbl.groupsZoneOld[_group:getName()] then
                 chbl.debug(_unit:getPlayerName().." entered Inner zone ")
-                trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerHigh.wav" )
+                trigger.action.outSoundForGroup(_group:getID(), "l10n/DEFAULT/geigerMedToHigh.wav" )
                 timer.scheduleFunction(chbl.geiger, _group, timer.getTime() + 5)
             end
         end 
@@ -99,15 +106,18 @@ function chbl.dosimeter(_group)
     
     local _distance = mist.utils.get3DDist(chbl.reactorPos, mist.getLeadPos(_group:getName()))
 
-    local _dose = chbl.coreDose / ( _distance/10 * _distance/10 )
+    local _dose = chbl.coreDose  / ( _distance/10 * _distance/10 ) + chbl.backgroundDose
     
     if chbl.groupsDose[_group:getName()] == nil then
         chbl.groupsDose[_group:getName()] = 0
     end
     
-    chbl.groupsDose[_group:getName()] = chbl.groupsDose[_group:getName()] + _dose
+    chbl.groupsDose[_group:getName()] = chbl.groupsDose[_group:getName()] + _dose + chbl.backgroundDose
 
-    local _message = "Current reading: ".._dose.."R/s \nTotal Dose: "..chbl.groupsDose[_group:getName()].." Roentgen"
+    _dosePrint = math.floor(_dose*1000)/1000
+    _doseTotal = math.floor(chbl.groupsDose[_group:getName()]*1000)/1000
+
+    local _message = "Current reading: ".._dosePrint.." R/s \nTotal Dose: ".._doseTotal.." Roentgen"
     trigger.action.outTextForGroup(_group:getID(), _message, 1, true)
 end
 

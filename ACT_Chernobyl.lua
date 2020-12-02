@@ -143,7 +143,7 @@ function chbl.dosimeter(_group)
     _dosePrint = math.floor(_dose*1000)/1000
     _doseTotal = math.floor(chbl.groupsDose[_group:getName()]*1000)/1000
 
-    local _message = "Current reading: ".._dosePrint.." R/s \nTotal Dose: ".._doseTotal.." Roentgen"
+    local _message = "Current reading: ".._dosePrint.." R/s"
     trigger.action.outTextForGroup(_group:getID(), _message, 1, true)
 end
 

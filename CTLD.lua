@@ -152,7 +152,8 @@ ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock
 ctld.pickupZones = {
     { "infPickup-1", "none", -1, "yes", 0 },
     { "infPickup-2", "none", -1, "yes", 0 },
-    { "infPickup-3", "none", -1, "yes", 0 }
+    { "infPickup-3", "none", -1, "yes", 0 },
+    { "infPickup-4", "none", -1, "yes", 0 }
 }
 
 
@@ -200,6 +201,14 @@ ctld.transportPilotNames = {
 -- Use any of the predefined names or set your own ones
 
 ctld.extractableGroups = {
+    "pickupGroup-1",
+    "pickupGroup-2",
+    "pickupGroup-3",
+    "pickupGroup-4",
+    "pickupGroup-5",
+    "pickupGroup-6",
+    "pickupGroup-7",
+    "pickupGroup-8",
 }
 
 -- ************** Logistics UNITS FOR CRATE SPAWNING ******************
